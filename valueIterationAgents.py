@@ -25,6 +25,9 @@ class ValueIterationAgent(ValueEstimationAgent):
         for a given number of iterations using the supplied
         discount factor.
     """
+#|-----------------------------------------------------------------------------|
+# __init__
+#|-----------------------------------------------------------------------------|
     def __init__(self, mdp, discount = 0.9, iterations = 100):
         """
           Your value iteration agent should take an mdp on
@@ -45,7 +48,35 @@ class ValueIterationAgent(ValueEstimationAgent):
 
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
-
+        self.oldValues= self.values.copy()
+        #repeat until all iterations are done
+        for i in range(self.iterations):
+            #for all s in S
+            for currentState in self.mdp.getStates():
+#                 #debug
+#                 print ('currentState = {} '.format(currentState))
+#                 #debug -ends
+        
+                possibleActions = self.mdp.getPossibleActions(currentState)
+                if not mdp.isTerminal(currentState):
+                    actionValue = -float('inf')
+#                 #debug
+#                 print ('possibleActions = {} '.format(possibleActions))
+#                 #debug -ends
+                #for all a in A
+                for currentAction in possibleActions:
+                    qValue = self.computeQValueFromValues(currentState, currentAction)
+                    actionValue = max(actionValue, qValue)
+                    self.values[currentState]=actionValue 
+                #for currentAction -ends
+            #for currentState -ends
+#             #debug
+#             print ('self.values = {} '.format(self.values))
+#             #debug -ends
+            self.oldValues = self.values.copy()
+        #for i -ends
+#|------------------------ __init__ -ends -------------------------------------|
+                        
 
     def getValue(self, state):
         """
@@ -53,15 +84,33 @@ class ValueIterationAgent(ValueEstimationAgent):
         """
         return self.values[state]
 
-
+#|-----------------------------------------------------------------------------|
+# computeQValueFromValues
+#|-----------------------------------------------------------------------------|
     def computeQValueFromValues(self, state, action):
         """
           Compute the Q-value of action in state from the
           value function stored in self.values.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
+        transitionStatesAndProbs = self.mdp.getTransitionStatesAndProbs(\
+                                                    state, action)
+        qValue = 0
+        
+        for transition in transitionStatesAndProbs:
+            qValue += self.mdp.getReward(state, action, transition[0])\
+                        + self.oldValues[transition[0]]*self.discount*transition[1]
+        #for transition -ends
+#         #debug
+#         print ('qValue = {} '.format(qValue))
+#         #debug -ends
+        return qValue
+    
+#|------------------------computeQValueFromValues -ends------------------------|    
+    
+#|-----------------------------------------------------------------------------|
+# computeActionFromValues
+#|-----------------------------------------------------------------------------|
     def computeActionFromValues(self, state):
         """
           The policy is the best action in the given state
@@ -72,7 +121,21 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        if self.mdp.isTerminal(state):
+            return None
+        possibleActions = self.mdp.getPossibleActions(state)
+        bestVal = -float('inf')
+
+        for currentAction in possibleActions:
+            actionVal = self.computeQValueFromValues(state, currentAction)
+            if actionVal>bestVal:
+                bestVal = actionVal
+                bestAction = currentAction
+            #if actionVal -ends
+        #for currentAction -ends
+        return bestAction
+#|------------------------computeActionFromValues -ends----------------------------------|    
+    
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
